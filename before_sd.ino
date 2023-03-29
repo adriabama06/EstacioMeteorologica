@@ -4,8 +4,7 @@
 #include <LiquidCrystal.h> // https://github.com/arduino-libraries/LiquidCrystal
 #include <SFE_BMP180.h> // https://github.com/sparkfun/BMP180_Breakout
 #include <Wire.h>
-#include <SPI.h>
-#include <SD.h> // https://github.com/arduino-libraries/SD
+// #include <SD.h> // https://github.com/arduino-libraries/SD
 
 
 
@@ -20,6 +19,7 @@ const int rs = 12, en = 11, d4 = 6, d5 = 5, d6 = 4, d7 = 3; // https://naylampme
 
 // BMP180
 // No defines, use I2C:
+// 5v
 // BMP180     SCL SDA
 // Uno/Nano   A5  A4
 // Mega       21  20
@@ -27,20 +27,7 @@ const int rs = 12, en = 11, d4 = 6, d5 = 5, d6 = 4, d7 = 3; // https://naylampme
 double presion_nivel_del_mar = 1019.5; // presion sobre el nibel del mar en mbar
 
 // SD
-// 5v
-// SD         CS MOSI SCK MISO
-// Uno/Nano   4  11   13  12
-// Mega     4/53 51   52  50
-// 4 is in use, use 53, is close to the other cables
 #define SD_CS_PIN 53
-
-
-
-// macros
-
-#define SD_FILE_LOG(id) String("DATA_") + String(id) + String(".TXT")
-
-#define S String
 
 
 
@@ -136,40 +123,9 @@ int bmp_180_sensor(double& pression, double& altitude)
 }
 
 namespace c_sd {
-    File f;
-    String filename;
+    // File f;
 
-    void save() {
-        // to save content open and close the file
-        f.close();
-        f = SD.open(filename.c_str(), FILE_WRITE);
-    }
-
-    void write(String text) {
-        f.write(text.c_str(), text.length());
-
-        Serial.println(text);
     
-        delay(100);
-
-        save();
-    }
-
-    void open() {
-        filename = SD_FILE_LOG(0);
-
-        for(unsigned int i = 0; SD.exists(filename); i++)
-        {
-            filename = SD_FILE_LOG(i);
-        }
-        
-        c_lcd::print(String("Creating file:"), 0);
-        c_lcd::print(filename, 1);
-
-        delay(5000);
-
-        f = SD.open(filename.c_str(), FILE_WRITE);
-    }
 }
 
 
@@ -182,26 +138,14 @@ void setup()
         Serial.begin(9600);
     }
 
-    // columns, rows
-    lcd.begin(16, 2);
-
     dht.begin();
 
     bmp180.begin();
 
-    bool r = SD.begin(SD_CS_PIN);
+    // columns, rows
+    lcd.begin(16, 2);
 
-    if(r == true) {
-        Serial.println("r is true");
-    } else {
-        Serial.println("r is false");
-    }
-
-    c_sd::open();
-
-    c_sd::write(
-        S("# t=temerature in Celcius, h=humidity in percent, p=pression in mbar, a=altitude relative to sea in barcelona in meters\n")
-    );
+    c_lcd::print(String("Temperature:"), 0);
 }
 
 
@@ -223,13 +167,6 @@ void loop()
         Serial.println("Error on read BMP 180 sensor");
     }
 
-    c_sd::write(
-        S("t=") + S(temperature, 2) + S(";") +
-        S("h=") + S(humidity, 0) + S(";") +
-        S("p=") + S(pression, 2) + S(";") +
-        S("a=") + S(altitude, 2) + S("\n")
-    );
-
     c_lcd::print(
         String(temperature, 0) + String(" C - ") + String(humidity, 0) + String(" %")
     , 0);
@@ -238,7 +175,7 @@ void loop()
         String(pression, 2) + String(" mbar")
     , 1);
 
-    delay(5000);
+    delay(6000);
 
     c_lcd::print(
         String(altitude, 2) + String(" m")
