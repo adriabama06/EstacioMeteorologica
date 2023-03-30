@@ -39,6 +39,7 @@ double presion_nivel_del_mar = 1019.5; // presion sobre el nibel del mar en mbar
 // Mega     4/53 51   52  50
 // 4 is in use, use 53, is close to the other cables
 #define SD_CS_PIN 53
+int has_sd_start = 0;
 
 
 
@@ -146,13 +147,16 @@ namespace c_sd {
     String filename;
 
     void save() {
+        if(!has_sd_start) return;
         // to save content open and close the file
         f.close();
         f = SD.open(filename.c_str(), FILE_WRITE);
     }
 
     void write(String text) {
-        f.write(text.c_str(), text.length());
+        if(has_sd_start) {
+            f.write(text.c_str(), text.length());
+        }
 
         Serial.println(text);
     
@@ -162,6 +166,8 @@ namespace c_sd {
     }
 
     void open() {
+        if(!has_sd_start) return;
+
         filename = SD_FILE_LOG(1);
 
         for(unsigned int i = 1; SD.exists(filename); i++)
@@ -220,6 +226,7 @@ void setup()
     if(!SD.begin(SD_CS_PIN)) {
         c_lcd::print(String("SD Error"), 0);
     } else {
+        has_sd_start = 1;
         c_lcd::print(String("SD Ok"), 0);
     }
 
