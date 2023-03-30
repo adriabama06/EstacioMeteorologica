@@ -11,6 +11,12 @@
 
 // defines
 
+// program
+// every how many seconds check and save data
+#define check_interval 30
+
+
+
 // DHT
 #define DHTPIN 2
 #define DHTTYPE DHT11 // DHT11 || DHT 21 || DHT22
@@ -158,7 +164,7 @@ namespace c_sd {
     void open() {
         filename = SD_FILE_LOG(0);
 
-        for(unsigned int i = 0; SD.exists(filename); i++)
+        for(unsigned int i = 1; SD.exists(filename); i++)
         {
             filename = SD_FILE_LOG(i);
         }
@@ -176,8 +182,12 @@ namespace c_sd {
 
 // Setup
 
+unsigned long last_millis = 0;
+
 void setup()
 {
+    last_millis = millis();
+
     if(Serial) {
         Serial.begin(9600);
     }
@@ -200,7 +210,7 @@ void setup()
     c_sd::open();
 
     c_sd::write(
-        S("# t=temerature in Celcius, h=humidity in percent, p=pression in mbar, a=altitude relative to sea in barcelona in meters\n")
+        S("# m=moment in seconds from the start of the program, t=temerature in Celcius, h=humidity in percent, p=pression in mbar, a=altitude relative to sea in barcelona in meters\n")
     );
 }
 
@@ -213,8 +223,32 @@ float temperature = 0;
 double pression = 0;
 double altitude = 0;
 
+void save_data()
+{
+    c_sd::write(
+        S("m=") + S(last_millis / 1000) + S(";") +
+        S("t=") + S(temperature, 2) + S(";") +
+        S("h=") + S(humidity, 0) + S(";") +
+        S("p=") + S(pression, 2) + S(";") +
+        S("a=") + S(altitude, 2) + S("\n")
+    );
+}
+
+unsigned long loop_start_millis = 0;
+unsigned long elapsed_millis = 0;
+
 void loop()
 {
+    loop_start_millis = millis();
+
+    elapsed_millis = loop_start_millis - last_millis;
+
+    if((elapsed_millis / 1000) < check_interval) {
+        return;
+    }
+
+    last_millis = loop_start_millis; // continue check async work
+
     if(dht_sensor(humidity, temperature) != 0) {
         Serial.println("Error on read DHT sensor");
     }
@@ -223,12 +257,7 @@ void loop()
         Serial.println("Error on read BMP 180 sensor");
     }
 
-    c_sd::write(
-        S("t=") + S(temperature, 2) + S(";") +
-        S("h=") + S(humidity, 0) + S(";") +
-        S("p=") + S(pression, 2) + S(";") +
-        S("a=") + S(altitude, 2) + S("\n")
-    );
+    save_data();
 
     c_lcd::print(
         String(temperature, 0) + String(" C - ") + String(humidity, 0) + String(" %")
