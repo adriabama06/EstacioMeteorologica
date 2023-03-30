@@ -162,19 +162,17 @@ namespace c_sd {
     }
 
     void open() {
-        filename = SD_FILE_LOG(0);
+        filename = SD_FILE_LOG(1);
 
         for(unsigned int i = 1; SD.exists(filename); i++)
         {
             filename = SD_FILE_LOG(i);
         }
-        
-        c_lcd::print(String("Creating file:"), 0);
-        c_lcd::print(filename, 1);
-
-        delay(5000);
 
         f = SD.open(filename.c_str(), FILE_WRITE);
+
+        c_lcd::print(String("Creant fitxer:"), 0);
+        c_lcd::print(filename, 1);
     }
 }
 
@@ -195,23 +193,49 @@ void setup()
     // columns, rows
     lcd.begin(16, 2);
 
+    c_lcd::print(String("LCD Ok"), 0);
+
+    delay(((check_interval * 0.1) * 1000) - 200);
+
     dht.begin();
 
-    bmp180.begin();
+    float dht_test = dht.readHumidity();
 
-    bool r = SD.begin(SD_CS_PIN);
-
-    if(r == true) {
-        Serial.println("r is true");
+    if(isnan(dht_test)) {
+        c_lcd::print(String("DHT Error"), 0);
     } else {
-        Serial.println("r is false");
+        c_lcd::print(String("DHT Ok"), 0);
     }
 
+    delay(((check_interval * 0.1) * 1000) - 200);
+
+    if(bmp180.begin() == 0) {
+        c_lcd::print(String("BMP180 Error"), 0);
+    } else {
+        c_lcd::print(String("BMP180 Ok"), 0);
+    }
+
+    delay(((check_interval * 0.1) * 1000) - 200);
+
+    if(!SD.begin(SD_CS_PIN)) {
+        c_lcd::print(String("SD Error"), 0);
+    } else {
+        c_lcd::print(String("SD Ok"), 0);
+    }
+
+    delay(((check_interval * 0.1) * 1000) - 200);
+
     c_sd::open();
+
+    delay(((check_interval * 0.1) * 1000) - 400);
 
     c_sd::write(
         S("# m=moment in seconds from the start of the program, t=temerature in Celcius, h=humidity in percent, p=pression in mbar, a=altitude relative to sea in barcelona in meters\n")
     );
+
+    c_lcd::print(String("Tot preparat"), 0);
+
+    delay(((check_interval * 0.1) * 1000) - 200);
 }
 
 
@@ -250,11 +274,11 @@ void loop()
     last_millis = loop_start_millis; // continue check async work
 
     if(dht_sensor(humidity, temperature) != 0) {
-        Serial.println("Error on read DHT sensor");
+        c_lcd::print("DHT Error", 0);
     }
 
     if(bmp_180_sensor(pression, altitude) != 0) {
-        Serial.println("Error on read BMP 180 sensor");
+        c_lcd::print("BMP180 Error", 0);
     }
 
     save_data();
@@ -267,11 +291,9 @@ void loop()
         String(pression, 2) + String(" mbar")
     , 1);
 
-    delay(5000);
+    delay(((check_interval * 0.5) * 1000) - 600);
 
     c_lcd::print(
         String(altitude, 2) + String(" m")
     , 1);
-
-    delay(6000);
 }
