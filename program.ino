@@ -291,7 +291,7 @@ void loop()
     save_data();
 
     c_lcd::print(
-        String(temperature, 0) + String(" C - ") + String(humidity, 0) + String(" %")
+        String(temperature, 1) + String(" C - ") + String(humidity, 0) + String(" %")
     , 0);
 
     c_lcd::print(
