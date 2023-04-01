@@ -182,6 +182,33 @@ namespace c_sd {
     }
 }
 
+namespace c_time {
+    unsigned long day = 0;
+    unsigned long hour = 0;
+    unsigned long minute = 0;
+    unsigned long second = 0;
+
+    void update() {
+        while (second >= 60)
+        {
+            second -= 60;
+            minute += 1;
+        }
+        
+        while (minute >= 60)
+        {
+            minute -= 60;
+            hour += 1;
+        }
+
+        while (hour >= 24)
+        {
+            hour -= 24;
+            day += 1;
+        }
+    }
+}
+
 
 
 // Setup
@@ -257,7 +284,7 @@ double altitude = 0;
 void save_data()
 {
     c_sd::write(
-        S("m=") + S(last_millis / 1000) + S(";") +
+        S("m=") + S(c_time::day) + S(":") + S(c_time::hour) + S(":") + S(c_time::minute) + S(":") + S(c_time::second) + S(";") +
         S("t=") + S(temperature, 2) + S(";") +
         S("h=") + S(humidity, 0) + S(";") +
         S("p=") + S(pression, 2) + S(";") +
@@ -267,16 +294,27 @@ void save_data()
 
 unsigned long loop_start_millis = 0;
 unsigned long elapsed_millis = 0;
+unsigned long elapsed_millis_seconds = 0;
 
 void loop()
 {
     loop_start_millis = millis();
 
-    elapsed_millis = loop_start_millis - last_millis;
-
-    if((elapsed_millis / 1000) < check_interval) {
+    if(loop_start_millis < last_millis) {
+        last_millis = loop_start_millis + elapsed_millis;
         return;
     }
+
+    elapsed_millis = loop_start_millis - last_millis;
+    elapsed_millis_seconds = elapsed_millis / 1000;
+
+    if(elapsed_millis_seconds < check_interval) {
+        return;
+    }
+
+    c_time::second += elapsed_millis_seconds;
+
+    c_time::update();
 
     last_millis = loop_start_millis; // continue check async work
 
