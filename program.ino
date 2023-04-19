@@ -264,7 +264,7 @@ void setup()
     delay(((check_interval * 0.1) * 1000) - 400);
 
     c_sd::write(
-        S("# m=moment in seconds from the start of the program, t=temerature in Celcius, h=humidity in percent, p=pression in mbar, a=altitude relative to sea in barcelona in meters\n")
+        S("# m=time elapsed from the start of the program in day:hour:minute:seconds, t=temerature in Celcius, h=humidity in percent, p=pression in mbar, a=altitude relative to sea in barcelona in meters\n")
     );
 
     c_lcd::print(String("Tot preparat"), 0);
@@ -285,7 +285,7 @@ void save_data()
 {
     c_sd::write(
         S("m=") + S(c_time::day) + S(":") + S(c_time::hour) + S(":") + S(c_time::minute) + S(":") + S(c_time::second) + S(";") +
-        S("t=") + S(temperature, 2) + S(";") +
+        S("t=") + S(temperature, 1) + S(";") +
         S("h=") + S(humidity, 0) + S(";") +
         S("p=") + S(pression, 2) + S(";") +
         S("a=") + S(altitude, 2) + S("\n")
