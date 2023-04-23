@@ -316,7 +316,7 @@ void loop()
 
     c_time::update();
 
-    last_millis = loop_start_millis; // continue check async work
+    last_millis = loop_start_millis;
 
     if(dht_sensor(humidity, temperature) != 0) {
         c_lcd::print("DHT Error", 0);
