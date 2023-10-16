@@ -300,6 +300,8 @@ void loop()
 {
     loop_start_millis = millis();
 
+    // https://forum.arduino.cc/t/what-is-maximum-value-of-millis/43970
+    // Cause max time in millis is: 49 days and 17 hours, reset the counter plus elapsed time of error by reset count
     if(loop_start_millis < last_millis) {
         last_millis = loop_start_millis + elapsed_millis;
         return;
